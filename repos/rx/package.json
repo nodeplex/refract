@@ -1,0 +1,30 @@
+{
+  "name": "@oasix/rx",
+  "version": "1.0.0-pre",
+  "description": "",
+  "main": "dist/index.js",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/gpickell/oasix.git",
+    "directory": "repos/rx"
+  },
+  "author": "Garth Pickell",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/gpickell/oasix/issues"
+  },
+  "homepage": "https://github.com/gpickell/oasix#readme",
+  "babel": {
+    "presets": [
+      [
+        "@babel/preset-env",
+        {
+          "targets": {
+            "node": "current"
+          }
+        }
+      ]
+    ],
+    "inputSourceMap": true
+  }
+}

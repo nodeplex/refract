@@ -1,0 +1,16 @@
+{
+    "compilerOptions": {
+        "composite": true
+    },
+    "include": [
+        "src"
+    ],
+    "references": [
+        {
+            "path": "repos/ix"
+        },
+        {
+            "path": "repos/rx"
+        }
+    ]
+}

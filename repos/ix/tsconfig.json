@@ -1,0 +1,30 @@
+{
+    "compilerOptions": {
+        "composite": true,
+        "target": "ES6",
+        "module": "commonjs",
+        "outDir": "dist",
+        "strictNullChecks": true,
+        "esModuleInterop": true,
+        "allowSyntheticDefaultImports": true,
+        "allowUnreachableCode": false,
+        "noImplicitAny": true,
+        "noImplicitReturns": true,
+        "strictPropertyInitialization": true,
+        "experimentalDecorators": true,
+        "sourceMap": true,
+        "declaration": true,
+        "jsx": "react",
+        "noEmitOnError": true,
+        "rootDir": "src",
+        "tsBuildInfoFile": "dist/.tsinfo"
+    },
+    "include": [
+        "src"
+    ],
+    "references": [
+        {
+            "path": "../rx"
+        }
+    ]    
+}

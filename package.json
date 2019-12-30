@@ -1,0 +1,18 @@
+{
+  "private": true,
+  "workspaces": [
+    "dev",
+    "repos/ix",
+    "repos/rx"
+  ],
+  "jest": {
+    "testRegex": "repos/.*/dist/__tests__/.*\\.test\\.js$",
+    "watchPathIgnorePatterns": [
+      "<rootDir>/src/"
+    ]
+  },
+  "scripts": {
+    "compile:watch": "tsc -b --watch",
+    "test:watch": "jest --watch"
+  }
+}
