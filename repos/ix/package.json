@@ -1,5 +1,5 @@
 {
-  "name": "@oasix/ix",
+  "name": "@rflect/ix",
   "version": "1.0.0-pre",
   "description": "",
   "main": "dist/index.js",
@@ -15,7 +15,7 @@
   },
   "homepage": "https://github.com/gpickell/oasix#readme",
   "dependencies": {
-    "@oasix/rx": "1.0.0-pre",
+    "@rflect/rx": "1.0.0-pre",
     "react": "^16.12.0"
   },
   "devDependencies": {

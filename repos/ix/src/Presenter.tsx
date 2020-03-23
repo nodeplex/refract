@@ -1,5 +1,5 @@
 import React, { useRef, useContext } from "react";
-import rx from "@oasix/rx";
+import rx from "@rflect/rx";
 
 import { Collection, Visual, VisualProps } from "./defs";
 import { useJournal } from "./Hooks";

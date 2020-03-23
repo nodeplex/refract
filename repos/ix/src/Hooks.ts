@@ -1,4 +1,4 @@
-import rx from "@oasix/rx";
+import rx from "@rflect/rx";
 import React, { useRef, useEffect, useState } from "react";
 
 let context: RenderContext | undefined;
@@ -157,15 +157,18 @@ export function useTrap<T, K extends rx.Func<T>>(topic: T, key: K, f: (event: rx
     rx.focus(observer, topic);
 }
 
-export function useMemoVisual<P = {}>(fc: React.FC<P>, props: P) {
+export function useMemoVisual<P>(fc: React.FC<P>, props: P) {
     const render = useRef(fc);
     render.current = fc;
 
     const memo = useRef<typeof fc>();
     if (memo.current === undefined) {
-        memo.current = React.memo(function (props: P) {
-            return render.current(props);
-        });
+        const invoker = function (...args: any) {
+            return render.current.apply(this, args);
+        };
+
+        const current = memo.current = React.memo(adorn(invoker));
+        wrappers.set(current, current);
     }
 
     return React.createElement(memo.current, props);

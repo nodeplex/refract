@@ -1,8 +1,8 @@
 import React from 'react';
 import './App.css';
 
-import ix from "@oasix/ix";
-import rx from '@oasix/rx';
+import ix from "@rflect/ix";
+import rx from '@rflect/rx';
 
 class Model extends rx.Observable {
     name = "";

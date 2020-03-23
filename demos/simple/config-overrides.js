@@ -8,7 +8,6 @@ module.exports = {
             enforce: "pre"
         });
 
-        //console.log(config);
         return config;
     }
 };

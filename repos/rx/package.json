@@ -1,5 +1,5 @@
 {
-  "name": "@oasix/rx",
+  "name": "@rflect/rx",
   "version": "1.0.0-pre",
   "description": "",
   "main": "dist/index.js",
