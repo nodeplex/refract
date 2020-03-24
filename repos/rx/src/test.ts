@@ -17,12 +17,16 @@ function listener(event: rx.ReflectionEvent) {
     console.log(event);
 }
 
+const arr = new rx.Array<string>();
 rx.on(x, listener);
+rx.on(arr, listener);
 
 async function test() {
     rx.mark();
     x.name = "garth";
     x.name;
+
+    arr.push("test");
 
     await rx.pulse();
 

@@ -6,8 +6,6 @@ converters.set(Array.prototype, function <T>(topic: Array<T>) {
 });
 
 class _Array<T> extends Array<T> {
-    constructor(initialLength: number)
-    constructor(...items: T[])
     constructor(...args: any) {
         super(...args);
         return ObservableHandler.createProxy(this);

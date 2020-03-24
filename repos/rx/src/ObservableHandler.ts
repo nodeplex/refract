@@ -13,28 +13,12 @@ import journal = dispatch.journal;
 import keys = dispatch.keys;
 import topics = dispatch.topics;
 
-const meth = Symbol();
-const init = Symbol();
-
-declare global {
-    export interface Object {
-        [init]: boolean;
-    }
-
-    export interface Function {
-        [meth]: Function;
-    }
-}
+const methods = new WeakMap<object, AnyFunction>();
+const protos = new WeakSet<object>();
 
 function wrapMethod(f: AnyFunction, key: PropertyKey) {
     if (key === "constructor") {
-        Object.defineProperty(f, meth, {
-            configurable: false,
-            enumerable: false,
-            writable: false,
-            value: f
-        });
-
+        methods.set(f, f);
         return;
     }
 
@@ -84,19 +68,8 @@ function wrapMethod(f: AnyFunction, key: PropertyKey) {
         }
     });
 
-    Object.defineProperty(execute, meth, {
-        configurable: false,
-        enumerable: false,
-        writable: false,
-        value: execute
-    });
-
-    Object.defineProperty(f, meth, {
-        configurable: false,
-        enumerable: false,
-        writable: false,
-        value: execute
-    });
+    methods.set(f, execute);
+    methods.set(execute, execute);
 }
 
 class ObservableHandler implements ProxyHandler<object>, TopicState {
@@ -112,10 +85,12 @@ class ObservableHandler implements ProxyHandler<object>, TopicState {
     private constructor(target: object) {
         this.assert = this.assert.bind(this);
         this.target = target;
-        this.proxy = new Proxy({}, this);
+        this.proxy = new Proxy(target, this);
 
         let proto = Object.getPrototypeOf(target);
-        while (proto[init] !== false && proto !== Object.prototype) {
+        while (!protos.has(proto) && proto !== Object.prototype) {
+            protos.add(proto);
+
             const descriptors = Object.getOwnPropertyDescriptors(proto);
             for (const key of Reflect.ownKeys(descriptors)) {
                 const { value } = descriptors[key as any];
@@ -133,32 +108,16 @@ class ObservableHandler implements ProxyHandler<object>, TopicState {
         return handler.proxy as T;
     }
 
-    getPrototypeOf() {
-        return Object.getPrototypeOf(this.target);
-    }
-
     setPrototypeOf() {
         return false;
     }
 
-    isExtensible() {
-        return Reflect.isExtensible(this.target);
-    }
-
-    preventExtensions() {
-        return Reflect.preventExtensions(this.target);
-    }
-
-    getOwnPropertyDescriptor(__target: never, key: PropertyKey) {
-        return Reflect.getOwnPropertyDescriptor(this.target, key);
-    }
-
-    defineProperty(__target: never, key: PropertyKey, descriptor:  PropertyDescriptor) {
+    defineProperty(target: object, key: PropertyKey, descriptor:  PropertyDescriptor) {
         if (key === sym) {
             return false;
         }
 
-        if (Reflect.defineProperty(this.target, key, descriptor)) {
+        if (Reflect.defineProperty(target, key, descriptor)) {
             keys.push(key);
             topics.push(this.proxy);
             pulse();
@@ -169,18 +128,22 @@ class ObservableHandler implements ProxyHandler<object>, TopicState {
         return false;
     }
 
-    has(__target: never, key: PropertyKey) {
-        return Reflect.has(this.target, key);
+    has(target: object, key: PropertyKey) {
+        if (key === sym) {
+            return false;
+        }
+
+        return Reflect.has(target, key);
     }
 
-    get(__target: never, key: PropertyKey) {
+    get(target: object, key: PropertyKey, receiver: object) {
         if (key === sym) {
             return this;
         }
 
-        let result = Reflect.get(this.target, key, this.proxy);
+        let result = Reflect.get(target, key, receiver);
         if (typeof result === "function") {
-            result = result[meth] ?? result;
+            result = methods.get(result) ?? result;
         }
 
         if (markers.size > 0) {
@@ -190,12 +153,12 @@ class ObservableHandler implements ProxyHandler<object>, TopicState {
         return result;
     }
 
-    set(__target: never, key: PropertyKey, value: any) {
+    set(target: object, key: PropertyKey, value: any, receiver: object) {
         if (key === sym) {
             return false;
         }
 
-        if (Reflect.set(this.target, key, value, this.proxy)) {
+        if (Reflect.set(target, key, value, receiver)) {
             keys.push(key);
             topics.push(this.proxy);
             pulse();
@@ -206,12 +169,12 @@ class ObservableHandler implements ProxyHandler<object>, TopicState {
         return false;
     }
 
-    deleteProperty(__target: never, key: PropertyKey) {
+    deleteProperty(target: object, key: PropertyKey) {
         if (key === sym) {
             return false;
         }
 
-        if (Reflect.deleteProperty(this.target, key)) {
+        if (Reflect.deleteProperty(target, key)) {
             keys.push(key);
             topics.push(this.proxy);
             pulse();
@@ -220,10 +183,6 @@ class ObservableHandler implements ProxyHandler<object>, TopicState {
         }
 
         return false;
-    }
-    
-    ownKeys(__target: never) {
-        return Reflect.ownKeys(this.target);
     }
 }
 

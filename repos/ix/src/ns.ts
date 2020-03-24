@@ -1,3 +1,3 @@
 export * from "./defs";
 export * from "./Hooks";
-export * from "./Presenter";
+export { Text, Presenter, Binder, bindItem, bindVisual } from "./Presenter";

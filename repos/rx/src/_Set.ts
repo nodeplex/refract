@@ -9,10 +9,7 @@ converters.set(Map.prototype, function <T>(topic: Set<T>) {
 });
 
 class _Set<T> extends hoist(Set)<T> {
-    constructor(entries?: readonly T[] | null)
-    constructor(entries?: Iterable<T> | null)
-
-    constructor(args: any) {
+    constructor(...args: any) {
         super(...args);
         return ObservableHandler.createProxy(this);
     }

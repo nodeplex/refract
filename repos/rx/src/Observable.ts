@@ -58,13 +58,17 @@ export function reset(topic: any, state: any): void {
     }
 
     const handler = assert(topic);
+    const { target } = handler;
     keys.push(...Reflect.ownKeys(state));
-    keys.push(...Reflect.ownKeys(handler.target));
+    keys.push(...Reflect.ownKeys(target));
     topics.push(topic);
     pulse();
 
-    handler.target = {};
-    Object.assign(handler.target, state);
+    for (const key of Reflect.ownKeys(handler.target)) {
+        (target as any)[key] = undefined;
+    }
+    
+    Object.assign(target, state);
 }
 
 export function notify<T>(topic: T, ...members: (keyof T)[]) {

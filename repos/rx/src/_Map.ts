@@ -9,9 +9,6 @@ converters.set(Map.prototype, function <K, V>(topic: Map<K, V>) {
 });
 
 class _Map<K, V> extends hoist(Map)<K, V> {
-    constructor(entries?: readonly (readonly [K, V])[] | null)
-    constructor(entries: Iterable<readonly [K, V]>)
-
     constructor(...args: any) {
         super(...args);
         return ObservableHandler.createProxy(this);

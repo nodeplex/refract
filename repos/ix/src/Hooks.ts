@@ -145,6 +145,17 @@ export function useObserver(observer: rx.Observer) {
     return forwarder;
 }
 
+export function useTopics(...topics: unknown[]) {
+    const [gen, set] = useState(Symbol());    
+    const observer = useObserver(function (event) {
+        if (event.isNotify()) {
+            set(event.gen);
+        }
+    });
+
+    rx.focus(observer, ...topics);
+}
+
 export function useTrap<T, K extends rx.Func<T>>(topic: T, key: K, f: (event: rx.TrapEvent<T, K, T[K]>, ...args: Parameters<T[K]>) => any) {
     rx.notify(topic, key);
 
