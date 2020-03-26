@@ -26,9 +26,9 @@ interface ButtonProps {
 }
 
 const Button = ix.journal(function (props: ButtonProps) {
-    const { command } = props;
     console.log("render Button");
 
+    const { command } = props;
     const disabled = !command.query();
     return <button disabled={disabled} children="add" onClick={x => command.execute()} />;        
 });
@@ -72,7 +72,7 @@ const App = ix.memo(function (props: any) {
                 <PersonVisual />
             </div>
         </ix.Presenter>
-    </div>;  
+    </div>;
 
     return jsx;
 });

@@ -125,4 +125,8 @@ export function replay(list: JournalEntry[]) {
     return false;
 }
 
+export function capture<T, P extends any[]>(topic: T, f: (this: T, ...args: P) => any, ...args: P) {
+    journal.push([undefined, f, f.apply(topic, args)]);
+}
+
 export default Observable;

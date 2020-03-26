@@ -162,9 +162,9 @@ export function useTrap<T, K extends rx.Func<T>>(topic: T, key: K, f: (event: rx
     rx.focus(observer, topic);
 }
 
-export function useJournal<T extends React.FC<any>>(f: T) {
-    const ref = useRef<T>(f);
-    ref.current = f;
+export function useJournal<T extends React.FC<any>>(fc: T) {
+    const ref = useRef<T>(fc);
+    ref.current = fc;
 
     const wrapper = useRef<T>();
     const { current } = wrapper;
@@ -179,9 +179,9 @@ export function useJournal<T extends React.FC<any>>(f: T) {
     return current;
 }
 
-export function useMemo<T extends React.FC<any>>(f: T) {
-    const ref = useRef<T>(f);
-    ref.current = f;
+export function useMemo<T extends React.FC<any>>(fc: T) {
+    const ref = useRef<T>(fc);
+    ref.current = fc;
 
     const wrapper = useRef<T>();
     const { current } = wrapper;
