@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useContext } from 'react';
 import './App.css';
 
 import ix from "@rflect/ix";
@@ -19,28 +19,23 @@ class PersonList extends rx.Observable {
 }
 
 const add = new rx.Command<() => void>();
+const persons = ix.createItemContext<Person>();
 
-function Button(props: { command: typeof add }) {
-    const { command } = props;
-    function Visual() {
-        ix.useJournal();
-        console.log("render Button");
-
-        const disabled = !command.query();
-        return <button disabled={disabled} children="add" onClick={x => command.execute()} />;        
-    }
-
-    return ix.useMemoVisual(Visual, props);
+interface ButtonProps {
+    command: rx.Command<() => void>;
 }
 
-function App(props: any) {
-    if (ix.useStaticVisual()) {
-        return null;
-    }
+const Button = ix.journal(function (props: ButtonProps) {
+    const { command } = props;
+    console.log("render Button");
 
-    const model = new PersonList();
-    function Add() {
-        ix.useJournal();
+    const disabled = !command.query();
+    return <button disabled={disabled} children="add" onClick={x => command.execute()} />;        
+});
+
+const App = ix.memo(function (props: any) {
+    const model = ix.useInstance(PersonList);
+    const AddVisual = ix.useJournal(function () {
         console.log("render Add");    
 
         const name = model.name;
@@ -61,21 +56,25 @@ function App(props: any) {
         </React.Fragment>;
 
         return jsx;
-    }
+    });
 
-    const context = ix.bindItem<Person>();
+    const PersonVisual = ix.useJournal(function () {
+        const [model] = useContext(persons);
+        return <React.Fragment children={model.name} />;
+    });
+
     const jsx =
     <div>
-        <Add />
+        <AddVisual />
         <hr />
-        <ix.Presenter context={context} items={model.items}>
+        <ix.Presenter context={persons} items={model.items}>
             <div>
-                <ix.Binder context={context} visual={ix.Text} value={x => x.name} />
+                <PersonVisual />
             </div>
         </ix.Presenter>
-    </div>;
+    </div>;  
 
     return jsx;
-}
+});
 
 export default App;
