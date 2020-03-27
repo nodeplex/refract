@@ -19,7 +19,7 @@ class PersonList extends rx.Observable {
 }
 
 const add = new rx.Command<() => void>();
-const persons = ix.createItemContext<Person>();
+const persons = ix.createItemsContext<Person[]>();
 
 interface ButtonProps {
     command: rx.Command<() => void>;

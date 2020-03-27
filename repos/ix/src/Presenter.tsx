@@ -1,17 +1,13 @@
 import React, { createContext } from "react";
 import rx from "@rflect/rx";
 
-import { Collection, Visual, VisualProps } from "./defs";
+import { Collection, Item, Key, Items } from "./defs";
 import { useTopics, memo } from "./Hooks";
 
-function marshal<T, K>(items: Collection<T, K>) {
-    const map = new Map<string, [T, K]>();
-    if (items === undefined) {
-        return map;
-    }
-
+function marshal<T extends Items<T>>(items: T) {
     let seq = 0;
-    function add(key: K, value: T) {
+    const map = new Map<string, [Item<T>, Key<T>]>();
+    function add(key: Key<T>, value: Item<T>) {
         const id = rx.id(value) as any;
         const str = id?.description ?? ("key." + String(key));
         if (map.has(str)) {
@@ -28,17 +24,23 @@ function marshal<T, K>(items: Collection<T, K>) {
     return map;
 }
 
-export interface PresenterProps<T, K> {
-    context: React.Context<[T, Collection<T, K>, K]>;
-    items: Collection<T, K>;
+export type Binding<T extends Items<T>> = [Item<T>, T, Key<T>];
+
+export interface PresenterProps<T extends S, S extends Items<S>> {
+    context?: React.Context<Binding<S>>;
+    items?: T;
     children?: React.ReactNode;
 }
 
-export const Presenter = memo(function <T, K>(props: PresenterProps<T, K>) {
+export const Presenter = memo(function <T extends S, S extends Items<S>>(props: PresenterProps<T, S>) {
     const { context, items, children } = props;
     useTopics(items);
 
-    if (typeof items !== "object" || items === null) {
+    if (context === undefined) {
+        return null;
+    }
+
+    if (items === undefined) {
         return null;
     }
 
@@ -58,12 +60,19 @@ export const Presenter = memo(function <T, K>(props: PresenterProps<T, K>) {
     return <React.Fragment children={visuals} />;
 });
 
-const dummy = Object.freeze([
-    Object.freeze({}),
-    Object.freeze([]),
-    undefined
-]) as [any, Collection<any>, any];
+function never() {
+    throw new SyntaxError("The binding was not specified through a meantingful context.")
+}
 
-export function createItemContext<T, K = any>() {
-    return React.createContext<[T, Collection<T, K>, K]>(dummy);
+const dummy = [0, 0, 0] as [any, any, any];
+Object.defineProperties(dummy, {
+    0: { get: never },
+    1: { get: never },
+    2: { get: never },
+});
+
+Object.freeze(dummy);
+
+export function createItemsContext<T extends Items<T>>(binding: Binding<T> = dummy) {
+    return React.createContext<Binding<T>>(binding);
 }
