@@ -1,6 +1,5 @@
 import { converters } from "./convert";
 import { notify } from "./Observable";
-import { hoist } from "./hoist";
 
 import ObservableHandler from "./ObservableHandler";
 
@@ -8,16 +7,18 @@ converters.set(Map.prototype, function <K, V>(topic: Map<K, V>) {
     return new _Map<K, V>(topic);
 });
 
-class _Map<K, V> extends hoist(Map)<K, V> {
+class _Map<K, V> extends Map<K, V> {
+    protected proxy: this;
+
     constructor(...args: any) {
         super(...args);
-        return ObservableHandler.createProxy(this);
+        return this.proxy = ObservableHandler.createTracer(this);
     }
 
     clear() {
         if (this.size > 0) {
             super.clear();
-            notify(this, "size");
+            notify(this.proxy, "size");
         }
     }
 
@@ -26,15 +27,15 @@ class _Map<K, V> extends hoist(Map)<K, V> {
         super.set(key, value);
 
         if (this.size > size) {
-            notify(this, "size");
+            notify(this.proxy, "size");
         }
 
-        return this;
+        return this.proxy;
     }
 
     delete(key: K) {
         if (super.delete(key)) {
-            notify(this, "size", "delete");
+            notify(this.proxy, "size", "delete");
             return true;
         }
 

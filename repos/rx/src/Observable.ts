@@ -126,7 +126,23 @@ export function replay(list: JournalEntry[]) {
 }
 
 export function capture<T, P extends any[]>(topic: T, f: (this: T, ...args: P) => any, ...args: P) {
-    journal.push([undefined, f, f.apply(topic, args)]);
+    journal.push([topic, f, f.apply(topic, args), args]);
+}
+
+const tracers = new WeakMap<object, object>();
+
+/**
+ * This wraps the object in a proxy which can be used to mimic an observable, the
+ * draw back the target's own methods will not trigger changes. Some external
+ * additional wiring would be needed to do this. So, this method should be further
+ * wrapped in a purposed API for dealing with another observable subsystem.
+ * @param target 
+ */
+export function trace<T extends object>(target: T) {
+    const result = ObservableHandler.createTracer(target);
+    tracers.set(target, result);
+
+    return result;
 }
 
 export default Observable;

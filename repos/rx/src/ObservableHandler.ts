@@ -22,8 +22,9 @@ function wrapMethod(f: AnyFunction, key: PropertyKey) {
         return;
     }
 
-    function execute(...args: any) {
-        let result = f.apply(this, args);
+    function execute(this: object, ...args: any) {
+        const receiver = this[sym]?.receiver ?? this;
+        let result = f.apply(receiver, args);
         if (isTopicActive(this)) {
             const event = Object.create(TrapEvent.prototype) as Mutable<TrapEvent>;
             event.topic = this;
@@ -75,17 +76,14 @@ function wrapMethod(f: AnyFunction, key: PropertyKey) {
 class ObservableHandler implements ProxyHandler<object>, TopicState {
     id = gen.nextKey();
     gen = gen.current;
-    target: any;
-    proxy: any;
-
-    assert(f: (handler: ObservableHandler) => any) {
-        return f(this);
-    }
+    target: object;
+    proxy: object;
+    receiver: object;
 
     private constructor(target: object) {
-        this.assert = this.assert.bind(this);
         this.target = target;
         this.proxy = new Proxy(target, this);
+        this.receiver = this.proxy;
 
         let proto = Object.getPrototypeOf(target);
         while (!protos.has(proto) && proto !== Object.prototype) {
@@ -100,11 +98,17 @@ class ObservableHandler implements ProxyHandler<object>, TopicState {
             }
 
             proto = Object.getPrototypeOf(proto);
-        }
+        }        
     }
 
     static createProxy<T extends object>(target: T) {
         const handler = new this(target);
+        return handler.proxy as T;
+    }
+
+    static createTracer<T extends object>(target: T) {
+        const handler = new this(target);
+        handler.receiver = target;
         return handler.proxy as T;
     }
 
@@ -136,12 +140,12 @@ class ObservableHandler implements ProxyHandler<object>, TopicState {
         return Reflect.has(target, key);
     }
 
-    get(target: object, key: PropertyKey, receiver: object) {
+    get(target: object, key: PropertyKey) {
         if (key === sym) {
             return this;
         }
 
-        let result = Reflect.get(target, key, receiver);
+        let result = Reflect.get(target, key, this.receiver);
         if (typeof result === "function") {
             result = methods.get(result) ?? result;
         }
@@ -153,12 +157,12 @@ class ObservableHandler implements ProxyHandler<object>, TopicState {
         return result;
     }
 
-    set(target: object, key: PropertyKey, value: any, receiver: object) {
+    set(target: object, key: PropertyKey, value: any) {
         if (key === sym) {
             return false;
         }
 
-        if (Reflect.set(target, key, value, receiver)) {
+        if (Reflect.set(target, key, value, this.receiver)) {
             keys.push(key);
             topics.push(this.proxy);
             pulse();

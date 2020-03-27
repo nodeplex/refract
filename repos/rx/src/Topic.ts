@@ -14,6 +14,7 @@ export interface TopicState {
     id: symbol;
     gen: symbol;
     target: object;
+    receiver: object;
 }
 
 function throwInvalidTopic(): never {

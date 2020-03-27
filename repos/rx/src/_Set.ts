@@ -1,6 +1,5 @@
 import { converters } from "./convert";
 import { notify } from "./Observable";
-import { hoist } from "./hoist";
 
 import ObservableHandler from "./ObservableHandler";
 
@@ -8,16 +7,18 @@ converters.set(Map.prototype, function <T>(topic: Set<T>) {
     return new _Set<T>(topic);
 });
 
-class _Set<T> extends hoist(Set)<T> {
+class _Set<T> extends Set<T> {
+    protected proxy: this;
+
     constructor(...args: any) {
         super(...args);
-        return ObservableHandler.createProxy(this);
+        return this.proxy = ObservableHandler.createTracer(this);
     }
 
     clear() {
         if (this.size > 0) {
             super.clear();
-            notify(this, "size");
+            notify(this.proxy, "size");
         }
     }
 
@@ -26,7 +27,7 @@ class _Set<T> extends hoist(Set)<T> {
         super.add(value);
 
         if (this.size > size) {
-            notify(this, "size");
+            notify(this.proxy, "size");
         }
 
         return this;
@@ -34,7 +35,7 @@ class _Set<T> extends hoist(Set)<T> {
 
     delete(value: T) {
         if (super.delete(value)) {
-            notify(this, "size");
+            notify(this.proxy, "size");
             return true;
         }
 
