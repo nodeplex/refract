@@ -78,12 +78,47 @@ export function journal<T extends React.FC<any>>(fc: T): T {
     }
 
     const Memo = React.memo(Render);
-    return ((props: any) => <Memo {...props} />) as any;
+    return function (props: any) {
+        props = useFantoms(props);
+        return <Memo {...props} />;
+    } as any;
 }
 
 export function memo<T extends React.FC<any>>(fc: T): T {
     const Memo = React.memo(fc);
-    return ((props: any) => <Memo {...props} />) as any;
+    return function (props: any) {
+        props = useFantoms(props);
+        return <Memo {...props} />;
+    } as any;
+}
+
+export function useFantoms<P>(props: P): P {
+    const ref = useRef<Map<PropertyKey, [Function, Function]>>();
+    if (ref.current === undefined) {
+        ref.current = new Map<PropertyKey, [Function, Function]>();
+    }
+
+    const map = ref.current;
+    const result = {} as any;
+    for (const [key, value] of Object.entries(props)) {
+        if (typeof value === "function") {
+            let wrapper = map.get(key);
+            if (wrapper === undefined) {
+                wrapper = [function (...args: any) {
+                    return wrapper![1].apply(this, args);
+                }, value];
+
+                map.set(key, wrapper);
+            }
+
+            wrapper[1] = value;
+            result[key] = wrapper[0];
+        } else {
+            result[key] = value;
+        }
+    }
+
+    return result;
 }
 
 export function useConstant<T>(f: () => T) {
