@@ -1,5 +1,4 @@
 export * from "./defs";
-export * from "./Command";
 export * from "./Observable";
 export * from "./Observer";
 export * from "./ReflectionEvent";

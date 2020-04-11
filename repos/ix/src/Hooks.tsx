@@ -1,5 +1,6 @@
 import rx from "@rflect/rx";
 import React, { useRef, useEffect, useState } from "react";
+import AsyncMonitor from "./AsyncMonitor";
 
 class JournalerRef {
     journal?: rx.JournalEntry[];
@@ -275,4 +276,12 @@ export function useMemo<T extends React.FC<any>>(fc: T) {
             return current.apply(this, args);
         }) as any as T;
     });
+}
+
+export function useAsync<T>() {
+    const ref = useInstance(AsyncMonitor);
+    const { freeze } = ref;
+    useEffect(freeze, [freeze]);
+
+    return ref as AsyncMonitor<T>;
 }

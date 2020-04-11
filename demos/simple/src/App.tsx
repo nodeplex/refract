@@ -18,11 +18,11 @@ class PersonList extends rx.Observable {
     items = new rx.Array<Person>();
 }
 
-const add = new rx.Command<() => void>();
+const add = new ix.Command<() => void>();
 const persons = ix.createItemsContext<Person[]>();
 
 interface ButtonProps {
-    command: rx.Command<() => void>;
+    command: ix.Command<() => void>;
 }
 
 const Button = ix.journal(function (props: ButtonProps) {
