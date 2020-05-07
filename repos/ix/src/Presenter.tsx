@@ -1,8 +1,10 @@
-import React, { createContext } from "react";
+import React from "react";
 import rx from "@rflect/rx";
 
-import { Collection, Item, Key, Items } from "./defs";
-import { useTopics, memo } from "./Hooks";
+import { Item, Key, Items } from "./defs";
+import { useTopics } from "./ObserverRef";
+import { useAtoms } from "./atom";
+import { useVisuals, useMemoVisual } from "./JournalerRef";
 
 function marshal<T extends Items<T>>(items: T) {
     let seq = 0;
@@ -32,33 +34,41 @@ export interface PresenterProps<T extends S, S extends Items<S>> {
     children?: React.ReactNode;
 }
 
-export const Presenter = memo(function <T extends S, S extends Items<S>>(props: PresenterProps<T, S>) {
-    const { context, items, children } = props;
-    useTopics(items);
+export function Presenter<T extends S, S extends Items<S>>(props: PresenterProps<T, S>) {
+    props = useAtoms(props);
 
-    if (context === undefined) {
-        return null;
-    }
+    const vis = useVisuals({
+        Visual() {
+            const { context, items, children } = props;
+            useTopics(items);
+        
+            if (context === undefined) {
+                return null;
+            }
+        
+            if (items === undefined) {
+                return null;
+            }
+        
+            const frag =
+            <React.Fragment children={children} />;
+        
+            const visuals = [] as React.ReactNode[];
+            for (const [key, [item, k]] of marshal(items)) {
+                const jsx =
+                <context.Provider key={key} value={[item, items, k]}>
+                    {React.cloneElement(frag)}
+                </context.Provider>;
+        
+                visuals.push(jsx);
+            }
 
-    if (items === undefined) {
-        return null;
-    }
-
-    const frag =
-    <React.Fragment children={children} />;
-
-    const visuals = [] as React.ReactNode[];
-    for (const [key, [item, k]] of marshal(items)) {
-        const jsx =
-        <context.Provider key={key} value={[item, items, k]}>
-            {React.cloneElement(frag)}
-        </context.Provider>;
-
-        visuals.push(jsx);
-    }
-
-    return <React.Fragment children={visuals} />;
-});
+            return <React.Fragment children={visuals} />;
+        }
+    });
+    
+    return useMemoVisual(vis, props);
+}
 
 function never() {
     throw new SyntaxError("The binding was not specified through a meantingful context.")
@@ -76,3 +86,5 @@ Object.freeze(dummy);
 export function createItemsContext<T extends Items<T>>(binding: Binding<T> = dummy) {
     return React.createContext<Binding<T>>(binding);
 }
+
+export default undefined;

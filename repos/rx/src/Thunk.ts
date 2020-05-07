@@ -11,8 +11,6 @@ import * as dispatch from "./dispatch";
 
 import markers = dispatch.markers;
 import journal = dispatch.journal;
-import keys = dispatch.keys;
-import topics = dispatch.topics;
 
 declare module "./convert" {
     interface Convert {

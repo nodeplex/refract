@@ -63,7 +63,7 @@ export abstract class NotifyEvent extends ReflectionEvent {
     has(topic: unknown): boolean;
     has<T>(topic: T, key?: keyof T): boolean;
 
-    has<T>(topic: unknown, key?: PropertyKey) {
+    has(topic: unknown, key?: PropertyKey) {
         if (this.topics.has(topic)) {
             if (key !== undefined) {
                 return this.keys.has(key);
@@ -78,7 +78,6 @@ export abstract class NotifyEvent extends ReflectionEvent {
     record(marker: number[]): [JournalEntry[], unknown[]] {
         let start: number | undefined;
         const result = [] as JournalEntry[];
-        const length = this.journal.length;
         for (const end of marker) {
             if (start !== undefined) {
                 result.push(...this.journal.slice(start, end));

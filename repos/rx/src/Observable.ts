@@ -1,3 +1,4 @@
+import { AnyClass } from "./defs";
 import { JournalEntry } from "./ReflectionEvent";
 
 import * as dispatch from "./dispatch";
@@ -13,7 +14,7 @@ import journal = dispatch.journal;
 import keys = dispatch.keys;
 import topics = dispatch.topics;
 
-converters.set(Object.prototype, function (topic) {
+converters.set(Object.prototype, function () {
     const result = new Observable();
     reset(result, this);
     return result;
@@ -31,6 +32,17 @@ export class Observable {
     constructor() {
         return ObservableHandler.createProxy(this);
     }
+}
+
+export function extend<T extends AnyClass>(cls: T) {
+    class Extension extends cls {
+        constructor(...args: any[]) {
+            super(...args);
+            return ObservableHandler.createProxy(this);
+        }
+    }
+
+    return Extension as any as T;
 }
 
 function intrinsicThrow() {

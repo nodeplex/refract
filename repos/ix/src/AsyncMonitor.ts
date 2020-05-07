@@ -1,4 +1,6 @@
 import rx from "@rflect/rx";
+import { useEffect } from "react";
+import { useInstance } from "./hooks";
 
 function observe<T>(promise: Promise<T>) {
     const result = {
@@ -153,4 +155,12 @@ export class AsyncMonitor<T> extends rx.Observable {
     }
 }
 
-export default AsyncMonitor;
+export function useAsync<T>() {
+    const ref = useInstance(AsyncMonitor);
+    const { freeze } = ref;
+    useEffect(freeze, [freeze]);
+
+    return ref as AsyncMonitor<T>;
+}
+
+export default undefined;

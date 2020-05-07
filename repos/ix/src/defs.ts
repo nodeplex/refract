@@ -1,5 +1,9 @@
 import React from "react";
 
+export interface AnyFC {
+    (props?: any, ...args: any): React.ReactElement | null;
+}
+
 export type Visual = keyof React.ReactDOM | React.JSXElementConstructor<any>;
 export type ComponentProps<T extends Visual> = T extends React.JSXElementConstructor<infer P> ? Extract<P, object> : never;
 export type VisualProps<T extends Visual> = ComponentProps<T extends keyof React.ReactDOM ? React.ReactDOM[T] : T>;
