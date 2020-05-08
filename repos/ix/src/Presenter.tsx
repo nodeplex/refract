@@ -1,10 +1,27 @@
-import React from "react";
+import React, { Context, ElementType, useContext } from "react";
 import rx from "@rflect/rx";
 
-import { Item, Key, Items } from "./defs";
+import { Items, Item, Key, Binding } from "./defs";
 import { useTopics } from "./ObserverRef";
 import { useAtoms } from "./atom";
 import { useVisuals, useMemoVisual } from "./JournalerRef";
+
+export interface BindingProps<T extends Items<T>> {
+    binding: Binding<T>;
+}
+
+export interface PresenterProps<T extends Items<T>, P> {
+    binding?: never;
+    type: ElementType<P> | Context<Binding<T>>;
+    items: T;
+    children?: React.ReactNode;
+}
+
+export type Predicate<T extends Items<T>, F> = ((...binding: Binding<T>) => F) | (F extends Function ? never : F);
+
+export type PredicateProps<T extends Items<T>, P> = {
+    [K in Exclude<keyof P, keyof PresenterProps<T, P>>]: Predicate<T, P[K]>;
+};
 
 function marshal<T extends Items<T>>(items: T) {
     let seq = 0;
@@ -26,39 +43,59 @@ function marshal<T extends Items<T>>(items: T) {
     return map;
 }
 
-export type Binding<T extends Items<T>> = [Item<T>, T, Key<T>];
+const context = React.createContext([] as any[]);
 
-export interface PresenterProps<T extends S, S extends Items<S>> {
-    context?: React.Context<Binding<S>>;
-    items?: T;
-    children?: React.ReactNode;
+export function PresenterContent(props: { children?: React.ReactNode }) {
+    const [type, rest, binding] = useContext(context);
+    if (type === undefined) {
+        return null;
+    }
+
+    const { children } = props;
+    const next: any = { binding, children };
+    for (const key in rest) {
+        let value = rest[key];
+        if (typeof value === "function") {
+            value = value.apply(undefined, binding);
+        }
+
+        next[key] = value;
+    }
+    
+    return React.createElement(type, next);
 }
 
-export function Presenter<T extends S, S extends Items<S>>(props: PresenterProps<T, S>) {
+export function Presenter<T extends Items<T>, P extends Partial<BindingProps<T>>>(props: PresenterProps<T, P> & PredicateProps<T, P>) {
     props = useAtoms(props);
 
     const vis = useVisuals({
-        Visual() {
-            const { context, items, children } = props;
+        Stem() {
+            const { type, items, children, ...rest } = props;
             useTopics(items);
-        
-            if (context === undefined) {
-                return null;
-            }
-        
-            if (items === undefined) {
-                return null;
-            }
-        
+
             const frag =
             <React.Fragment children={children} />;
-        
+
+            if (typeof type === "string" || typeof type === "function") {
+                const visuals = [] as React.ReactNode[];
+                for (const [key, [item, k]] of marshal(items)) {
+                    const jsx =
+                    <context.Provider key={key} value={[type, rest, [item, items, k]]}>
+                        {React.cloneElement(frag)}
+                    </context.Provider>;
+            
+                    visuals.push(jsx);
+                }
+                
+                return <React.Fragment children={visuals} />;
+            }
+       
             const visuals = [] as React.ReactNode[];
             for (const [key, [item, k]] of marshal(items)) {
                 const jsx =
-                <context.Provider key={key} value={[item, items, k]}>
+                <type.Provider key={key} value={[item, items, k]}>
                     {React.cloneElement(frag)}
-                </context.Provider>;
+                </type.Provider>;
         
                 visuals.push(jsx);
             }

@@ -136,9 +136,9 @@ export function useVisuals<T extends { [key: string]: AnyFC }>(visuals: T): T {
     return result;
 }
 
-export function useMemoVisual<P>(vis: { Visual: React.FC<P> }, props: P) {
+export function useMemoVisual<P, Q extends P>(vis: { Stem: React.FC<P> }, props: Q) {
     const deps = [...Object.keys(props), ...Object.values(props)];
-    return useMemo(() => <vis.Visual {...props} />, deps);
+    return useMemo(() => <vis.Stem {...props} />, deps);
 }
 
 export default undefined;

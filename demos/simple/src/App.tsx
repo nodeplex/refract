@@ -1,4 +1,4 @@
-import React, { useContext } from 'react';
+import React from 'react';
 import './App.css';
 
 import ix from "@rflect/ix";
@@ -14,7 +14,6 @@ class Person {
 }
 
 const add = new ix.Command<() => void>();
-const persons = ix.createItemsContext<Person[]>();
 
 interface ButtonProps {
     command: ix.Command<() => void>;
@@ -24,7 +23,7 @@ function Button(props: ButtonProps) {
     props = ix.useAtoms(props);
 
     const vis = ix.useVisuals({
-        Visual() {
+        Stem() {
             ix.useJournal();
             console.log("render Button");
         
@@ -37,7 +36,7 @@ function Button(props: ButtonProps) {
     return ix.useMemoVisual(vis, props);
 }
 
-function App(props: any) {
+function App(props: {}) {
     props = ix.useAtoms(props);
 
     const model = ix.useModel(class {
@@ -70,21 +69,21 @@ function App(props: any) {
             return jsx;
         },
 
-        Person() {
+        Person(props: ix.BindingProps<Person[]>) {
             ix.useJournal();
 
-            const [model] = useContext(persons);
+            const [model] = props.binding;
             return <React.Fragment children={model.name} />;    
         },
 
-        Visual() {
+        Stem() {
             const jsx =
             <div>
                 <vis.Add />
                 <hr />
-                <ix.Presenter context={persons} items={model.items}>
+                <ix.Presenter type={vis.Person} items={model.items}>
                     <div>
-                        <vis.Person />
+                        <ix.PresenterContent />
                     </div>
                 </ix.Presenter>
             </div>;
