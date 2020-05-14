@@ -19,7 +19,8 @@
         "jsx": "react",
         "noEmitOnError": true,
         "rootDir": "src",
-        "tsBuildInfoFile": "dist/.tsinfo"
+        "tsBuildInfoFile": "dist/.tsinfo",
+        "declarationMap": true
     },
     "include": [
         "src"

@@ -18,7 +18,7 @@ class _Set<T> extends Set<T> {
     clear() {
         if (this.size > 0) {
             super.clear();
-            notify(this.proxy, "size");
+            notify(this.proxy as Set<T>, "size");
         }
     }
 
@@ -27,7 +27,7 @@ class _Set<T> extends Set<T> {
         super.add(value);
 
         if (this.size > size) {
-            notify(this.proxy, "size");
+            notify(this.proxy as Set<T>, "size", value);
         }
 
         return this;
@@ -35,7 +35,7 @@ class _Set<T> extends Set<T> {
 
     delete(value: T) {
         if (super.delete(value)) {
-            notify(this.proxy, "size");
+            notify(this.proxy as Set<T>, "size", value);
             return true;
         }
 

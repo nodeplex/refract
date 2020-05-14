@@ -1,4 +1,5 @@
 import { useRef } from "react";
+import rx from "@rflect/rx";
 
 const empty = Object.freeze(Object.create(null));
 const target = Symbol();
@@ -20,46 +21,28 @@ export function createAtom(f: Function, atom?: Atom): Atom {
     return result;
 }
 
-export function useAtoms<T>(state: T): T {
+export function useAtom<T extends rx.AnyFunction>(f: T): T {
     const ref = useRef<any>();
-    let { current } = ref;
-    if (typeof state === "function") {
-        if (typeof current !== "function") {
-            current = undefined;
+    return ref.current = createAtom(f, ref.current) as any;
+}
+
+export function useAtoms<T extends object>(props: T, wrap?: (f: Function) => Function): T {
+    const ref = useRef<any>(empty);
+    const { current } = ref;
+    const atoms = Object.create(null);
+    const result = Object.create(null);
+    for (const key in props) {
+        let value = props[key];
+        if (typeof value === "function") {
+            value = createAtom(wrap ? wrap(value) : value, current[key]) as any;
+            atoms[key] = value;
         }
 
-        const result = ref.current = createAtom(state, current);
-        return result as any as T;
+        result[key] = value;
     }
 
-    if (typeof state === "object" && state !== null) {
-        if (typeof current !== "function") {
-            current = empty;
-        }
-
-        const atoms = Object.create(null);
-        const result = Object.create(state as any);
-        for (const key in state) {
-            let value = state[key];
-            if (typeof value === "function") {
-                value = createAtom(value, current[key]) as any;
-                atoms[key] = value;
-            }
-
-            Object.defineProperty(result, key, {
-                configurable: false,
-                enumerable: true,
-                writable: false,
-                value
-            });
-        }
-        
-        ref.current = atoms;
-        return result;
-    }
-
-    ref.current = undefined;
-    return state;
+    ref.current = atoms;
+    return result;
 }
 
 export default undefined;

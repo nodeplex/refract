@@ -4,6 +4,42 @@ import { NotifyEvent } from "./ReflectionEvent";
 
 import Observer from "./Observer";
 import { stateOf } from "./Topic";
+import { AnyFunction } from "./defs";
+
+let pending = false;
+const tasks = [] as [Function, any[]][];
+function enqueue<T extends AnyFunction>(f: T, ...args: Parameters<T>) {
+    if (!pending) {
+        pending = true;
+        setImmediate(function () {
+            pending = false;
+            flush();
+        });
+    }
+
+    tasks.push([f, args]);
+}
+
+let flushing = false;
+export function flush() {
+    if (flushing) {
+        return false;
+    }
+
+    flushing = true;
+    for (const [f, args] of tasks) {
+        try {
+            f.apply(undefined, args);
+        } catch (ex) {
+            console.log(ex);
+        }
+    }
+
+    flushing = false;
+    tasks.length = 0;
+
+    return true;
+}
 
 function invoke(observer: Observer, event: NotifyEvent) {
     if (isObserverActive(observer)) {
@@ -32,18 +68,18 @@ function broadcast(resolve: () => void) {
 
         for (const observer of observers(topic)) {
             if (add(observer)) {
-                setImmediate(invoke, observer, event);
+                enqueue(invoke, observer, event);
             }
         }
     }
 
     promise = undefined;
-    setImmediate(resolve);
+    enqueue(resolve);
 }
 
 let promise: Promise<void> | undefined;
 function defer(resolve: () => void) {
-    setImmediate(broadcast, resolve);
+    enqueue(broadcast, resolve);
 }
 
 export function pulse() {

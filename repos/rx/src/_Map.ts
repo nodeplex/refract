@@ -18,7 +18,7 @@ class _Map<K, V> extends Map<K, V> {
     clear() {
         if (this.size > 0) {
             super.clear();
-            notify(this.proxy, "size");
+            notify(this.proxy as Map<K, V>, "size");
         }
     }
 
@@ -27,7 +27,7 @@ class _Map<K, V> extends Map<K, V> {
         super.set(key, value);
 
         if (this.size > size) {
-            notify(this.proxy, "size");
+            notify(this.proxy as Map<K, V>, "size", key);
         }
 
         return this.proxy;
@@ -35,7 +35,7 @@ class _Map<K, V> extends Map<K, V> {
 
     delete(key: K) {
         if (super.delete(key)) {
-            notify(this.proxy, "size", "delete");
+            notify(this.proxy as Map<K, V>, "size", key);
             return true;
         }
 

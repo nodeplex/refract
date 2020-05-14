@@ -1,4 +1,4 @@
-import { AnyFunction } from "./defs";
+import { AnyFunction, Member } from "./defs";
 
 export type Func<T> = {
     [K in keyof T]-?: T[K] extends AnyFunction ? K : never;
@@ -7,9 +7,9 @@ export type Func<T> = {
 export abstract class ReflectionEvent {
     isNotify(): this is NotifyEvent;
     isNotify(topic: unknown): this is NotifyEvent;
-    isNotify<T>(topic: T, key?: keyof T): this is NotifyEvent;
+    isNotify<T>(topic: T, key?: Member<T>): this is NotifyEvent;
 
-    isNotify(topic?: any, key?: PropertyKey) {
+    isNotify(topic?: any, key?: unknown) {
         if (this instanceof NotifyEvent) {
             if (topic !== undefined) {
                 return this.has(topic, key);
@@ -54,16 +54,19 @@ export abstract class NotifyEvent extends ReflectionEvent {
     /** The items that was recorded. */
     readonly journal!: JournalEntry[];
 
+    /** The items that were changed. */
+    readonly items!: Map<any, Set<any>>;
+
     /** The keys that were changed. */
-    readonly keys!: Set<PropertyKey>;
+    readonly keys!: Set<unknown>;
 
     /** The topics that were changed. */
     readonly topics!: Set<unknown>;
 
     has(topic: unknown): boolean;
-    has<T>(topic: T, key?: keyof T): boolean;
+    has<T>(topic: T, key?: Member<T>): boolean;
 
-    has(topic: unknown, key?: PropertyKey) {
+    has(topic: unknown, key?: PropertyKey | [any, any]) {
         if (this.topics.has(topic)) {
             if (key !== undefined) {
                 return this.keys.has(key);

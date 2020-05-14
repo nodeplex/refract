@@ -20,9 +20,7 @@ interface ButtonProps {
 }
 
 function Button(props: ButtonProps) {
-    props = ix.useAtoms(props);
-
-    const vis = ix.useVisuals({
+    const [jsx] = ix.useVisuals(props, {
         Stem() {
             ix.useJournal();
             console.log("render Button");
@@ -33,23 +31,21 @@ function Button(props: ButtonProps) {
         }
     });
 
-    return ix.useMemoVisual(vis, props);
+    return jsx;
 }
 
-function App(props: {}) {
-    props = ix.useAtoms(props);
-
+function App() {
     const model = ix.useModel(class {
         name = "";
         items = new rx.Array<Person>();
     });
 
-    const vis = ix.useVisuals({
+    const [jsx, vis] = ix.useVisuals({}, {
         Add() {
             ix.useJournal();
-            console.log("render Add");    
+            console.log("render Add");
 
-            const name = model.name;
+            const { name } = model;
             ix.useTrap(add, "query", function (event) {
                 event.result = name.length > 0;
             });
@@ -58,14 +54,20 @@ function App(props: {}) {
                 model.items.push(new Person(name));
                 model.name = "";
             });
-    
+
+            const NameInput = ix.useComponent("input", {
+                onChange(event) {
+                    model.name = event.target.value;
+                }
+            });
+
             const jsx =
             <React.Fragment>
-                <input type="text" value={name} onChange={e => (model.name = e.target.value)} />
+                <NameInput type="text" value={name} />
                 <hr />
                 <Button command={add} />
             </React.Fragment>;
-    
+
             return jsx;
         },
 
@@ -92,7 +94,7 @@ function App(props: {}) {
         }
     });
 
-    return ix.useMemoVisual(vis, props);
+    return jsx;
 }
 
 export default App;

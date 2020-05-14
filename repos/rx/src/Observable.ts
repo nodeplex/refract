@@ -1,4 +1,4 @@
-import { AnyClass } from "./defs";
+import { AnyClass, Member } from "./defs";
 import { JournalEntry } from "./ReflectionEvent";
 
 import * as dispatch from "./dispatch";
@@ -14,9 +14,9 @@ import journal = dispatch.journal;
 import keys = dispatch.keys;
 import topics = dispatch.topics;
 
-converters.set(Object.prototype, function () {
+converters.set(Object.prototype, function (value) {
     const result = new Observable();
-    reset(result, this);
+    reset(result, value);
     return result;
 });
 
@@ -63,7 +63,7 @@ export function mixin(topic: any, state: any): void {
     Object.assign(handler.target, state);
 }
 
-export function reset<T>(topic: T, state: Partial<T>): void;
+export function reset<T>(topic: T, state: T): void;
 export function reset(topic: any, state: any): void {
     if (topic.constructor !== Observable) {
         intrinsicThrow();        
@@ -76,14 +76,14 @@ export function reset(topic: any, state: any): void {
     topics.push(topic);
     pulse();
 
-    for (const key of Reflect.ownKeys(handler.target)) {
+    for (const key of Reflect.ownKeys(target)) {
         (target as any)[key] = undefined;
     }
     
     Object.assign(target, state);
 }
 
-export function notify<T>(topic: T, ...members: (keyof T)[]) {
+export function notify<T>(topic: T, ...members: Member<T>[]) {
     for (const key of members) {
         keys.push(key);
     }

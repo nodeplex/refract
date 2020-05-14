@@ -1,11 +1,9 @@
 import rx from "@rflect/rx";
-import React, { useEffect, useState, useRef, useMemo } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 
-import { AnyFC } from "./defs";
+import { AnyFC, Visuals } from "./defs";
 import { useInstance } from "./hooks";
-import { createAtom } from "./atom";
-
-const empty = Object.freeze(Object.create(null));
+import { useAtoms } from "./atom";
 
 class JournalerRef {
     journal?: rx.JournalEntry[];
@@ -117,28 +115,14 @@ export function journal<T extends AnyFC>(fc: T) {
     return render as any as T;
 }
 
-export function useVisuals<T extends { [key: string]: AnyFC }>(visuals: T): T {
-    const ref = useRef<any>(empty);
-    let { current } = ref;
-    const atoms = Object.create(null);
-    const result = Object.create(visuals as any);
-    for (const key in visuals) {
-        let value = visuals[key];
-        if (typeof value === "function") {
-            value = createAtom(journal(value), current[key]) as any;
-            atoms[key] = value;
-        }
+export function useVisuals<P extends object, T extends Visuals<T>>(props: P, visuals: T): [React.ReactElement, T & Omit<P, keyof T>]  {
+    const vis = {
+        ...useAtoms(props),
+        ...useAtoms(visuals, journal)
+    };
 
-        result[key] = value;
-    }
-    
-    ref.current = atoms;
-    return result;
-}
-
-export function useMemoVisual<P, Q extends P>(vis: { Stem: React.FC<P> }, props: Q) {
-    const deps = [...Object.keys(props), ...Object.values(props)];
-    return useMemo(() => <vis.Stem {...props} />, deps);
+    const deps = [...Object.keys(vis), ...Object.values(vis)];
+    return [useMemo(() => <vis.Stem />, deps), vis];
 }
 
 export default undefined;

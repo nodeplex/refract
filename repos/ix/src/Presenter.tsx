@@ -3,8 +3,7 @@ import rx from "@rflect/rx";
 
 import { Items, Item, Key, Binding } from "./defs";
 import { useTopics } from "./ObserverRef";
-import { useAtoms } from "./atom";
-import { useVisuals, useMemoVisual } from "./JournalerRef";
+import { useVisuals } from "./JournalerRef";
 
 export interface BindingProps<T extends Items<T>> {
     binding: Binding<T>;
@@ -66,9 +65,7 @@ export function PresenterContent(props: { children?: React.ReactNode }) {
 }
 
 export function Presenter<T extends Items<T>, P extends Partial<BindingProps<T>>>(props: PresenterProps<T, P> & PredicateProps<T, P>) {
-    props = useAtoms(props);
-
-    const vis = useVisuals({
+    const [jsx] = useVisuals(props, {
         Stem() {
             const { type, items, children, ...rest } = props;
             useTopics(items);
@@ -104,7 +101,7 @@ export function Presenter<T extends Items<T>, P extends Partial<BindingProps<T>>
         }
     });
     
-    return useMemoVisual(vis, props);
+    return jsx;
 }
 
 function never() {

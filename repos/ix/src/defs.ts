@@ -1,8 +1,17 @@
 import React from "react";
+import rx from "@rflect/rx";
 
 export interface AnyFC {
     (props?: any, ...args: any): React.ReactElement | null;
 }
+
+export interface VisualRoot {
+    Stem(): React.ReactElement | null;
+}
+
+export type Visuals<T> = VisualRoot & {
+    [K in keyof T]: T[K] extends rx.AnyFunction ? AnyFC : any;
+};
 
 export interface Collection<P extends [any, any]> {
     entries(): IterableIterator<P>;
