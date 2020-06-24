@@ -1,16 +1,12 @@
 import React from "react";
 import rx from "@rflect/rx";
 
-export interface AnyFC {
-    (props?: any, ...args: any): React.ReactElement | null;
+export interface AnyFC<T extends Array<any> = any> {
+    (props?: any, ...args: T): React.ReactElement | null;
 }
 
-export interface VisualRoot {
-    Stem(): React.ReactElement | null;
-}
-
-export type Visuals<T> = VisualRoot & {
-    [K in keyof T]: T[K] extends rx.AnyFunction ? AnyFC : any;
+export type Visuals<T> = {
+    [K in keyof T]: T[K] extends rx.AnyFunction ? AnyFC<[number[], symbol]> : any;
 };
 
 export interface Collection<P extends [any, any]> {

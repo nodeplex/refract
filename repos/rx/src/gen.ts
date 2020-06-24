@@ -3,7 +3,7 @@ let current = Symbol("gen.0");
 let genId = 0;
 let keyId = 0;
 
-const gen0 = current;
+export const gen0 = current;
 
 const gen = {
     gen0,

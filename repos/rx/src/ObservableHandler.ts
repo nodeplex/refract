@@ -1,5 +1,6 @@
 import gen from "./gen";
 import pulse from "./pulse";
+import play, { canPlay } from "./play";
 
 import { AnyFunction, Mutable } from "./defs";
 import { TrapEvent } from "./ReflectionEvent";
@@ -8,9 +9,9 @@ import { TopicState, sym } from "./Topic";
 import { isTopicActive, observers, has } from "./Observer";
 import * as dispatch from "./dispatch";
 
-import markers = dispatch.markers;
 import journal = dispatch.journal;
 import keys = dispatch.keys;
+import markers = dispatch.markers;
 import topics = dispatch.topics;
 
 const methods = new WeakMap<object, AnyFunction>();
@@ -24,7 +25,7 @@ function wrapMethod(f: AnyFunction, key: PropertyKey) {
 
     function execute(this: object, ...args: any) {
         const receiver = this[sym]?.receiver ?? this;
-        let result = f.apply(receiver, args);
+        let result: unknown = f.apply(receiver, args);
         if (isTopicActive(this)) {
             const event = Object.create(TrapEvent.prototype) as Mutable<TrapEvent>;
             event.topic = this;
@@ -47,7 +48,12 @@ function wrapMethod(f: AnyFunction, key: PropertyKey) {
         }
 
         if (markers.size > 0) {
-            journal.push([this, execute, result, args]);
+            if (canPlay(result)) {
+                const replay = result[play].bind(result);
+                journal.push([this, replay, replay(), []]);
+            } else {
+                journal.push([this, execute, result, args]);
+            }
         }
 
         return result;

@@ -2,7 +2,6 @@ import React, { Context, ElementType, useContext } from "react";
 import rx from "@rflect/rx";
 
 import { Items, Item, Key, Binding } from "./defs";
-import { useTopics } from "./ObserverRef";
 import { useVisuals } from "./JournalerRef";
 
 export interface BindingProps<T extends Items<T>> {
@@ -65,14 +64,10 @@ export function PresenterContent(props: { children?: React.ReactNode }) {
 }
 
 export function Presenter<T extends Items<T>, P extends Partial<BindingProps<T>>>(props: PresenterProps<T, P> & PredicateProps<T, P>) {
-    const [jsx] = useVisuals(props, {
+    const vis = useVisuals(props, {
         Stem() {
             const { type, items, children, ...rest } = props;
-            useTopics(items);
-
-            const frag =
-            <React.Fragment children={children} />;
-
+            const frag = <React.Fragment children={children} />;
             if (typeof type === "string" || typeof type === "function") {
                 const visuals = [] as React.ReactNode[];
                 for (const [key, [item, k]] of marshal(items)) {
@@ -101,7 +96,7 @@ export function Presenter<T extends Items<T>, P extends Partial<BindingProps<T>>
         }
     });
     
-    return jsx;
+    return <vis.Stem />;
 }
 
 function never() {

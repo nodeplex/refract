@@ -1,5 +1,6 @@
 import { AnyClass, Member } from "./defs";
 import { JournalEntry } from "./ReflectionEvent";
+import { gen0 } from "./gen";
 
 import * as dispatch from "./dispatch";
 import pulse from "./pulse";
@@ -25,6 +26,10 @@ export function id(topic: unknown) {
 }
 
 export function gen(topic: unknown) {
+    if (topic === 0) {
+        return gen0;
+    }
+
     return stateOf(topic)?.gen;
 }
 
@@ -45,42 +50,62 @@ export function extend<T extends AnyClass>(cls: T) {
     return Extension as any as T;
 }
 
-function intrinsicThrow() {
-    throw new SyntaxError("The given object is not intrinsic observable. ");
+export function mixin<T>(topic: T, state: Partial<T>): T;
+export function mixin(topic: any, state: any): any {
+    return reset(topic, {
+        ...topic,
+        ...state
+    });
 }
 
-export function mixin<T>(topic: T, state: Partial<T>): void;
-export function mixin(topic: any, state: any): void {
-    if (topic.constructor !== Observable) {
-        intrinsicThrow();        
-    }
-
-    const handler = assert(topic);
-    keys.push(...Reflect.ownKeys(state));
-    topics.push(topic);
-    pulse();
-
-    Object.assign(handler.target, state);
-}
-
-export function reset<T>(topic: T, state: T): void;
-export function reset(topic: any, state: any): void {
-    if (topic.constructor !== Observable) {
-        intrinsicThrow();        
-    }
-
+export function reset<T>(topic: T, state: T): T;
+export function reset(topic: any, state: any): any {
     const handler = assert(topic);
     const { target } = handler;
-    keys.push(...Reflect.ownKeys(state));
-    keys.push(...Reflect.ownKeys(target));
-    topics.push(topic);
-    pulse();
 
-    for (const key of Reflect.ownKeys(target)) {
-        (target as any)[key] = undefined;
+    let pokes: typeof props | undefined;
+    const props = Object.getOwnPropertyDescriptors(target);
+    for (const key in props) {
+        const prop = props[key];
+        if (prop.enumerable && prop.writable) {
+            const next = state[key];
+            if (!Object.is(prop.value, next)) {
+                if (pokes === undefined) {
+                    pokes = {};
+                }
+
+                prop.value = next;
+                pokes[key] = prop;
+            }
+        }
     }
-    
-    Object.assign(target, state);
+
+    for (const key in state) {
+        if (!(key in target)) {
+            const value = state[key];
+            if (value !== undefined) {
+                if (pokes === undefined) {
+                    pokes = {};
+                }
+
+                pokes[key] = {
+                    configurable: true,
+                    enumerable: true,
+                    writable: true,
+                    value
+                };
+            }
+        }
+    }
+
+    if (pokes !== undefined) {
+        Object.defineProperties(target, pokes);
+        topics.push(topic);
+        keys.push(...Object.keys(pokes));
+        pulse();    
+    }
+
+    return topic;
 }
 
 export function notify<T>(topic: T, ...members: Member<T>[]) {

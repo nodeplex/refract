@@ -61,68 +61,59 @@ class JournalerRef {
     }
 }
 
-let _useJournal = function (_: boolean): symbol | undefined {
-    throw new SyntaxError("useJournal() used incorrectly.");
-};
-
-export function useJournal(capture = true): symbol | undefined {
-    return _useJournal(capture);
-}
-
-export function journal<T extends AnyFC>(fc: T) {
+export function journal<T extends AnyFC<[number[], symbol, ...any[]]>>(fc: T) {
     function render(...args: any) {
-        let result: symbol | undefined;
-        let marker: number[] | undefined
-        function useJournal(capture: boolean) {
-            if (capture === false) {
-                if (marker !== undefined) {
-                    rx.unmark(marker);
-                }
-
-                return result;
-            }
-
-            if (marker !== undefined) {
-                rx.mark(marker);
-                return result;
-            }
-
-            const [gen, set] = useState(Symbol());
-            const journaler = useInstance(JournalerRef, set);
-            const { effect } = journaler;
-            useEffect(effect, [effect]);
-    
-            rx.focus(journaler.observe, journaler);
-            rx.notify(journaler);
-
-            marker = journaler.marker = rx.mark();
-            return result = gen;
-        }
-
-        const current = _useJournal;
+        const marker = rx.mark();
+        const [gen, set] = useState(rx.gen(0));
         try {
-            _useJournal = useJournal;
-            return fc.apply(this, args);
+            const [props, ...rest] = args;
+            return fc.call(this, props, marker, gen, ...rest);
         } finally {
-            _useJournal = current;
+            rx.unmark(marker);
 
-            if (marker !== undefined) {
-                rx.unmark(marker);
+            const journaler = useInstance(JournalerRef, set);
+            useEffect(journaler.effect, []);
+
+            if (marker.length > 0) {
+                // We have reads, so react to them.
+                rx.focus(journaler.observe, journaler);
+                rx.notify(journaler);
+                journaler.marker = marker;
+            } else {
+                // We don't, so don't react at all.
+                // Although, maybe the props will activat eteh other branch in the future.
+                rx.focus(journaler.observe);
+                journaler.marker = undefined;
             }
         }
     }
 
-    return render as any as T;
+    function hoist({ f }: { f: () => any }) {
+        return f();
+    }
+
+    type Props = T extends (props: infer R, ...args: any) => any ? R : never;
+    type Tail = T extends (props: any, gen: any, marker: any, ...args: infer R) => any ? R : never;
+
+    const _ = Symbol();
+    function memo(props: Props, ...args: Tail) {
+        const f = () => render.call(this, props, ...args);
+        return useMemo(() => React.createElement(hoist, { f }), [
+            ...Object.keys(props), _,
+            ...Object.values(props), _,
+            ...args
+        ]);
+    }
+
+    return memo;
 }
 
-export function useVisuals<P extends object, T extends Visuals<T>>(props: P, visuals: T): [React.ReactElement, T & Omit<P, keyof T>]  {
-    const vis = {
+export function useVisuals<P extends object, T extends Visuals<T>>(props: P, visuals: T)  {
+    const vis = useInstance(rx.Observable) as T & Omit<P, keyof T>;
+    return rx.reset(vis, {
         ...useAtoms(props),
         ...useAtoms(visuals, journal)
-    };
-
-    const deps = [...Object.keys(vis), ...Object.values(vis)];
-    return [useMemo(() => <vis.Stem />, deps), vis];
+    });
 }
 
 export default undefined;

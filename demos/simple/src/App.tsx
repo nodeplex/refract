@@ -20,9 +20,8 @@ interface ButtonProps {
 }
 
 function Button(props: ButtonProps) {
-    const [jsx] = ix.useVisuals(props, {
+    const vis = ix.useVisuals(props, {
         Stem() {
-            ix.useJournal();
             console.log("render Button");
         
             const { command } = props;
@@ -31,18 +30,17 @@ function Button(props: ButtonProps) {
         }
     });
 
-    return jsx;
+    return <vis.Stem />;
 }
 
-function App() {
+function App(props: {}) {
     const model = ix.useModel(class {
         name = "";
         items = new rx.Array<Person>();
     });
 
-    const [jsx, vis] = ix.useVisuals({}, {
+    const vis = ix.useVisuals(props, {
         Add() {
-            ix.useJournal();
             console.log("render Add");
 
             const { name } = model;
@@ -72,8 +70,6 @@ function App() {
         },
 
         Person(props: ix.BindingProps<Person[]>) {
-            ix.useJournal();
-
             const [model] = props.binding;
             return <React.Fragment children={model.name} />;    
         },
@@ -94,7 +90,7 @@ function App() {
         }
     });
 
-    return jsx;
+    return <vis.Stem />;
 }
 
 export default App;

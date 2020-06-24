@@ -2,6 +2,7 @@ import { converters } from "./convert";
 import { notify } from "./Observable";
 
 import ObservableHandler from "./ObservableHandler";
+import { applyReplayIterables } from "./play";
 
 converters.set(Map.prototype, function <T>(topic: Set<T>) {
     return new _Set<T>(topic);
@@ -42,5 +43,7 @@ class _Set<T> extends Set<T> {
         return false;
     }
 }
+
+applyReplayIterables(_Set);
 
 export default _Set as typeof Set;

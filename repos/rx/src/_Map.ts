@@ -2,6 +2,7 @@ import { converters } from "./convert";
 import { notify } from "./Observable";
 
 import ObservableHandler from "./ObservableHandler";
+import { applyReplayIterables, comparePair } from "./play";
 
 converters.set(Map.prototype, function <K, V>(topic: Map<K, V>) {
     return new _Map<K, V>(topic);
@@ -42,5 +43,7 @@ class _Map<K, V> extends Map<K, V> {
         return false;
     }
 }
+
+applyReplayIterables(_Map, comparePair);
 
 export default _Map as typeof Map;
