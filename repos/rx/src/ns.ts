@@ -9,5 +9,6 @@ export { default as convert } from "./convert";
 
 export { default as Array } from "./_Array";
 export { default as Map } from "./_Map";
+export { default as Promise } from "./_Promise";
 export { default as Set } from "./_Set";
 export { isTopic } from "./Topic";

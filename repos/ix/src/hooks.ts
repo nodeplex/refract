@@ -205,22 +205,6 @@ export function journal<T extends AnyFC<[number[], symbol, ...any[]]>>(fc: T) {
         return useMemo(() => createElement(hoist, { f }), deps);
     }
 
-    const name = "journal-fc " + fc.name;
-    Object.defineProperty(memo, "name", {
-        configurable: false,
-        enumerable: true,
-        writable: false,
-        value: name,
-    });
-
-    Object.defineProperty(memo, "toString", {
-        configurable: false,
-        enumerable: true,
-        get() {
-            return () => name;
-        }
-    });
-
     return memo;
 }
 

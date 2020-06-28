@@ -13,7 +13,7 @@ function _throw() {
 }
 
 export function atomizer<T>(apply?: (f: Function) => Function) {
-    function wrap() {
+    function wrap(key: string) {
         let f: Function = _throw;
         function forward(...args: any) {
             return f.apply(this, args);
@@ -24,6 +24,23 @@ export function atomizer<T>(apply?: (f: Function) => Function) {
             f = x;
             return wrapper as any as F;
         }
+
+        Object.defineProperty(wrapper, "name", {
+            configurable: false,
+            enumerable: true,
+            get() {
+                return `atom:${key} ${f.name}`;
+            }
+        });
+
+        Object.defineProperty(wrapper, "toString", {
+            configurable: false,
+            enumerable: true,
+            writable : false,
+            value() {
+                return this.name;
+            }
+        });
     
         return update;
     }
@@ -35,7 +52,7 @@ export function atomizer<T>(apply?: (f: Function) => Function) {
         for (const key in props) {
             let value = props[key];
             if (typeof value === "function") {
-                const atom = atoms[key] || wrap();
+                const atom = atoms[key] || wrap(key);
                 state[key] = atom;
                 value = atom(value);
             }
