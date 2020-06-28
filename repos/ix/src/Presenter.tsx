@@ -2,7 +2,7 @@ import React, { Context, ElementType, useContext } from "react";
 import rx from "@rflect/rx";
 
 import { Items, Item, Key, Binding } from "./defs";
-import { useVisuals } from "./JournalerRef";
+import { useVisuals } from "./hooks";
 
 export interface BindingProps<T extends Items<T>> {
     binding: Binding<T>;
